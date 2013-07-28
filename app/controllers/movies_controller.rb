@@ -1,4 +1,5 @@
 class MoviesController < ApplicationController
+  helper_method :sort_column
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -7,7 +8,8 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    column = sort_column
+    @movies = column ? Movie.order(column) : Movie.all
   end
 
   def new
@@ -36,6 +38,10 @@ class MoviesController < ApplicationController
     @movie.destroy
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
+  end
+
+  def sort_column 
+     %w[title release_date].include?(params[:sort]) ? params[:sort] : nil
   end
 
 end

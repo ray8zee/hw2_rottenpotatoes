@@ -4,9 +4,11 @@
 %table#movies
   %thead
     %tr
-      %th Movie Title
+      - column="title"
+      %th{:class => (hilite column) }= sortable "Movie Title", column
       %th Rating
-      %th Release Date
+      - column="release_date"
+      %th{:class => (hilite column) }= sortable column.titleize, column
       %th More Info
   %tbody
     - @movies.each do |movie|
