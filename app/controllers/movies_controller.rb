@@ -8,8 +8,12 @@ class MoviesController < ApplicationController
   end
 
   def index
-    column = sort_column
-    @movies = column ? Movie.order(column) : Movie.all
+    @all_ratings = Movie.all_ratings
+    @sort_column = sort_column
+    @checked_ratings, checked = checked_ratings
+    @movies = @sort_column || checked ?
+      Movie.where(rating: @checked_ratings.keys).order(@sort_column) : 
+      Movie.all
   end
 
   def new
@@ -39,9 +43,22 @@ class MoviesController < ApplicationController
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
   end
+  
+  private
 
   def sort_column 
-     %w[title release_date].include?(params[:sort]) ? params[:sort] : nil
+    sort = params[:sort]
+    %w[title release_date].include?(sort) ? sort : nil
+  end
+
+  def checked_ratings
+     ratings = params[:ratings] || {}
+     if ratings.empty?
+       Movie.all_ratings.each {|r| ratings[r] = 1 }
+       return ratings, false
+     else
+       return ratings, true
+     end
   end
 
 end
