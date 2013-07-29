@@ -1,5 +1,4 @@
 class MoviesController < ApplicationController
-  helper_method :sort_column
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -9,11 +8,12 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.all_ratings
-    @sort_column = sort_column
-    @checked_ratings, checked = checked_ratings
-    @movies = @sort_column || checked ?
-      Movie.where(rating: @checked_ratings.keys).order(@sort_column) : 
-      Movie.all
+    if got_params
+      @movies = Movie.where(rating: @ratings.keys).order(@sort)
+    else
+      flash.keep
+      redirect_to movies_path(:sort => @sort, :ratings => @ratings)
+    end
   end
 
   def new
@@ -46,22 +46,22 @@ class MoviesController < ApplicationController
   
   private
 
-  def sort_column 
-    sort = params[:sort] || session[:sort]
-    session[:sort] = sort if sort
-    %w[title release_date].include?(sort) ? sort : nil
-  end
-
-  def checked_ratings
-     ratings = params[:ratings] || session[:ratings] || {}
-     if ratings.empty?
-       Movie.all_ratings.each {|r| ratings[r] = 1 }
-       checked = false
-     else
-       checked = true
-     end
-     session[:ratings] = ratings
-     return ratings, checked
+  def got_params
+    @sort = params[:sort]
+    @ratings = params[:ratings]
+    result = @sort != nil && @ratings != nil 
+    @sort ||= session[:sort]
+    @ratings ||= session[:ratings] || {}
+    if @ratings.empty?
+      Movie.all_ratings.each {|r| @ratings[r] = 1 }
+    end
+    if !@sort || !%w[title release_date].include?(@sort)
+      @sort = 'title'
+      result = false
+    end
+    session[:sort] = @sort
+    session[:ratings] = @ratings
+    result
   end
 
 end
