@@ -47,18 +47,21 @@ class MoviesController < ApplicationController
   private
 
   def sort_column 
-    sort = params[:sort]
+    sort = params[:sort] || session[:sort]
+    session[:sort] = sort if sort
     %w[title release_date].include?(sort) ? sort : nil
   end
 
   def checked_ratings
-     ratings = params[:ratings] || {}
+     ratings = params[:ratings] || session[:ratings] || {}
      if ratings.empty?
        Movie.all_ratings.each {|r| ratings[r] = 1 }
-       return ratings, false
+       checked = false
      else
-       return ratings, true
+       checked = true
      end
+     session[:ratings] = ratings
+     return ratings, checked
   end
 
 end
