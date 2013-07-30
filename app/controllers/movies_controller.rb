@@ -9,7 +9,7 @@ class MoviesController < ApplicationController
   def index
     @all_ratings      = Movie.all_ratings
     @sort             = sanitize_sort    params[:sort]    || session[:sort]
-    @ratings          = sanitize_ratings params[:ratings] || session[:ratings]
+    @ratings          = sanitize_ratings params[:ratings] || session[:ratings] || {}
     session[:sort]    = @sort
     session[:ratings] = @ratings
 
@@ -56,7 +56,6 @@ class MoviesController < ApplicationController
   end
 
   def sanitize_ratings(ratings)
-    ratings ||= {}
     if ratings != {}
       ratings.delete_if { |r,v| not @all_ratings.include?(r) }
     end
