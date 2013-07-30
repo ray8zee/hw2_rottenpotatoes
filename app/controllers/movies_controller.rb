@@ -7,8 +7,13 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.all_ratings
-    if got_params
+    @all_ratings      = Movie.all_ratings
+    @sort             = sanitize_sort    params[:sort]    || session[:sort]
+    @ratings          = sanitize_ratings params[:ratings] || session[:ratings]
+    session[:sort]    = @sort
+    session[:ratings] = @ratings
+
+    if params[:sort] == @sort && params[:ratings] == @ratings
       @movies = Movie.where(rating: @ratings.keys).order(@sort)
     else
       flash.keep
@@ -46,22 +51,18 @@ class MoviesController < ApplicationController
   
   private
 
-  def got_params
-    @sort = params[:sort]
-    @ratings = params[:ratings]
-    result = @sort != nil && @ratings != nil 
-    @sort ||= session[:sort]
-    @ratings ||= session[:ratings] || {}
-    if @ratings.empty?
-      Movie.all_ratings.each {|r| @ratings[r] = 1 }
-    end
-    if !@sort || !%w[title release_date].include?(@sort)
-      @sort = 'title'
-      result = false
-    end
-    session[:sort] = @sort
-    session[:ratings] = @ratings
-    result
+  def sanitize_sort(sort)
+    %w[title release_date].include?(sort) ? sort : 'title'
   end
 
+  def sanitize_ratings(ratings)
+    ratings ||= {}
+    if ratings != {}
+      ratings.delete_if { |r,v| not @all_ratings.include?(r) }
+    end
+    if ratings.empty?
+      ratings = Hash[@all_ratings.map { |rating| [rating, 1] }]
+    end
+    return ratings
+  end
 end
